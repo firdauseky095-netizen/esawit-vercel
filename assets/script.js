@@ -1,5 +1,5 @@
-const ICON_EYE_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-const ICON_EYE_SLASH = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+const ICON_EYE_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+const ICON_EYE_SLASH = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
 const ICON_DOTS_VERTICAL = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>';
 
 function togglePassword(inputId, btn) {
@@ -25,19 +25,16 @@ function renderFormalEyeIcons() {
   });
 }
 
-// Menu Titik 3 yang terkunci sesuai Role Login
 async function initCornerMenu() {
   const header = document.querySelector('.header');
   if (!header || document.getElementById('cornerKebabMenu')) return;
 
   let user = null;
-  let dbMode = 'Cloud Storage';
   let harga = 2850;
   try {
     const res = await fetch('/api/data');
     const data = await res.json();
     user = data.user;
-    dbMode = data.dbMode;
     if (data.settingHarga) harga = data.settingHarga.harga_per_kg;
   } catch (e) {}
 
@@ -51,7 +48,6 @@ async function initCornerMenu() {
   let menuItems = '<a href="/" class="kebab-item">🌐 Portal Pantau Publik</a>';
 
   if (!user) {
-    // JIKA BELUM LOGIN (PUBLIK): Semua menu dashboard dikunci!
     menuItems += `
       <div class="kebab-item locked">🔒 Dashboard Admin (Wajib Login)</div>
       <div class="kebab-item locked">🔒 Dashboard Mandor (Wajib Login)</div>
@@ -59,7 +55,6 @@ async function initCornerMenu() {
       <a href="/#boxLogin" onclick="document.getElementById('lUser')?.focus();" class="kebab-item" style="color:#16a34a;">🔑 Silakan Login Petugas</a>
     `;
   } else {
-    // JIKA SUDAH LOGIN: Hanya tampilkan dashboard yang diizinkan untuk Role tersebut
     if (user.role === 'ADMIN') {
       menuItems += `
         <a href="/admin" class="kebab-item">🛡️ Dashboard Admin (Full Akses)</a>
@@ -89,7 +84,7 @@ async function initCornerMenu() {
     <div class="kebab-dropdown" id="dropdownKebab">
       <div class="kebab-header">
         <b>${user ? user.nama_lengkap : 'Pengunjung Publik (Tamu)'}</b>
-        <span>${user ? 'Role Resmi: ' + user.role + ' (' + user.nip + ')' : 'Status: Belum Login (View-Only)'}</span><br>
+        <span>${user ? 'Role: ' + user.role : 'Status: Belum Login'}</span><br>
         <span style="color:#15803d;font-weight:bold;">💰 Harga TBS: Rp ${fmt(harga)} / Kg</span>
       </div>
       ${menuItems}

@@ -13,53 +13,71 @@
   </div>
 
   <div class="grid-2">
+    <!-- PANEL HARGA TBS -->
     <div class="box" style="border-top:4px solid #eab308;">
       <h3 style="margin-top:0;color:#854d0e;">💰 Penetapan Harga Buah TBS Harian (Rp / Kg)</h3>
-      <p style="font-size:12px;color:#64748b;margin-top:0;">Harga TBS dapat berubah setiap hari. Perubahan harga dapat langsung diterapkan ke seluruh rekapitulasi hari ini.</p>
+      <p style="font-size:12px;color:#64748b;margin-top:0;">Harga TBS dapat diubah setiap hari oleh Admin dan langsung memperbarui rekapitulasi.</p>
       <form id="fHarga" class="form-2col-grid">
         <div>
           <label>Harga TBS Hari Ini (Rp / Kg)</label>
           <input type="number" id="inputHargaHarian" required>
         </div>
         <div>
-          <button type="submit" style="background:#ca8a04;width:100%;">💾 Update Harga Hari Ini</button>
+          <button type="submit" style="background:#ca8a04;width:100%;">💾 Update Harga</button>
         </div>
       </form>
       <div style="margin-top:10px;font-size:12px;color:#475569;">
         <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer;">
-          <input type="checkbox" id="chkUpdateSemua" checked style="width:auto;"> Hitung ulang otomatis semua nilai transaksi hari ini dengan harga baru
+          <input type="checkbox" id="chkUpdateSemua" checked style="width:auto;"> Hitung ulang otomatis semua nilai transaksi hari ini
         </label>
       </div>
     </div>
 
-    <div class="box" style="border-top:4px solid #7c3aed;">
-      <h3 style="margin-top:0;color:#5b21b6;">➕ Buat Akun Mandor / Operator Resmi</h3>
-      <form id="fUser" class="form-reg-grid" autocomplete="off">
-        <div><label>NIP</label><input type="text" id="uNip" placeholder="MND-99" required></div>
-        <div><label>Nama</label><input type="text" id="uNama" placeholder="Nama Petugas" required></div>
-        <div><label>Role</label><select id="uRole"><option value="MANDOR">MANDOR</option><option value="OPERATOR">OPERATOR</option></select></div>
-        <div><label>Lokasi</label><input type="text" id="uLok" placeholder="Afdeling 1" required></div>
-        <div><label>Username</label><input type="text" id="uUsr" placeholder="Buat username" autocomplete="off" required></div>
-        <div>
-          <label>Password</label>
+    <!-- PANEL UPDATE PROFIL ADMIN (GANTI NAMA / SANDI) -->
+    <div class="box" style="border-top:4px solid #2563eb;">
+      <h3 style="margin-top:0;color:#1e40af;">⚙️ Pengaturan Profil & Ganti Sandi Admin</h3>
+      <form id="fAdminProfile" class="form-2col-grid" autocomplete="off">
+        <div><label>Nama Lengkap Admin</label><input type="text" id="admNama" required></div>
+        <div><label>Username Login</label><input type="text" id="admUsr" autocomplete="off" required></div>
+        <div class="span-full">
+          <label>Kata Sandi Baru (Kosongkan jika tidak ingin mengubah sandi)</label>
           <div class="pass-wrap">
-            <input type="password" id="uPwd" placeholder="Buat sandi" autocomplete="new-password" required>
-            <button type="button" class="eye-btn" onclick="togglePassword('uPwd', this)"></button>
+            <input type="password" id="admPwd" placeholder="Sandi baru (opsional)" autocomplete="new-password">
+            <button type="button" class="eye-btn" onclick="togglePassword('admPwd', this)"></button>
           </div>
         </div>
-        <div class="span-full"><button type="submit" style="background:#7c3aed;width:100%;">Buat Akun Resmi (Langsung Approved)</button></div>
+        <div class="span-full"><button type="submit" style="background:#2563eb;width:100%;">💾 Simpan Perubahan Profil</button></div>
       </form>
     </div>
   </div>
 
+  <div class="box" style="border-top:4px solid #7c3aed;">
+    <h3 style="margin-top:0;color:#5b21b6;">➕ Buat Akun Mandor / Operator Resmi</h3>
+    <form id="fUser" class="form-reg-grid" autocomplete="off">
+      <div><label>NIP</label><input type="text" id="uNip" placeholder="MND-99" required></div>
+      <div><label>Nama</label><input type="text" id="uNama" placeholder="Nama Petugas" required></div>
+      <div><label>Role</label><select id="uRole"><option value="MANDOR">MANDOR</option><option value="OPERATOR">OPERATOR</option></select></div>
+      <div><label>Lokasi</label><input type="text" id="uLok" placeholder="Afdeling 1" required></div>
+      <div><label>Username</label><input type="text" id="uUsr" placeholder="Buat username" autocomplete="off" required></div>
+      <div>
+        <label>Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="uPwd" placeholder="Buat sandi" autocomplete="new-password" required>
+          <button type="button" class="eye-btn" onclick="togglePassword('uPwd', this)"></button>
+        </div>
+      </div>
+      <div class="span-full"><button type="submit" style="background:#7c3aed;width:100%;">Buat Akun Resmi (Langsung Approved)</button></div>
+    </form>
+  </div>
+
   <div class="box">
-    <h3 style="margin-top:0;">📊 Manajemen Rekapitulasi Transaksi (Fitur Edit / Koreksi Salah Input & Hapus)</h3>
+    <h3 style="margin-top:0;">📊 Manajemen Rekapitulasi Transaksi (Edit & Hapus)</h3>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Tiket</th><th>Status</th><th>Afdeling</th><th>Truk & Sopir</th>
-            <th>Janjang</th><th>Bruto</th><th>Tara</th><th>Sortasi</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th><th>Aksi Koreksi / Hapus</th>
+            <th>Janjang</th><th>Bruto</th><th>Tara</th><th>Sortasi</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th><th>Aksi</th>
           </tr>
         </thead>
         <tbody id="tTransAdmin"></tbody>
@@ -71,7 +89,7 @@
     <h3 style="margin-top:0;">👥 Daftar Akun Petugas & Persetujuan</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>NIP</th><th>Nama</th><th>Username</th><th>Sandi</th><th>Role</th><th>Status</th><th>Tindakan Admin</th></tr></thead>
+        <thead><tr><th>NIP</th><th>Nama</th><th>Username</th><th>Sandi</th><th>Role</th><th>Status</th><th>Tindakan</th></tr></thead>
         <tbody id="tUsers"></tbody>
       </table>
     </div>
@@ -107,8 +125,10 @@
       if (!d.user || d.user.role !== 'ADMIN') { window.location.href = '/'; return; }
       cacheTransaksi = d.transaksi;
 
-      document.getElementById('aInfo').innerText = 'Admin: ' + d.user.nama_lengkap + ' | Harga TBS Aktif: Rp ' + fmt(d.settingHarga.harga_per_kg) + '/Kg';
+      document.getElementById('aInfo').innerText = 'Admin: ' + d.user.nama_lengkap + ' | Harga Aktif: Rp ' + fmt(d.settingHarga.harga_per_kg) + '/Kg';
       document.getElementById('inputHargaHarian').value = d.settingHarga.harga_per_kg;
+      document.getElementById('admNama').value = d.user.nama_lengkap;
+      document.getElementById('admUsr').value = d.user.username;
 
       document.getElementById('tTransAdmin').innerHTML = d.transaksi.map(t => `
         <tr>
@@ -151,6 +171,21 @@
       });
       alert('Harga TBS harian berhasil diperbarui!');
       loadAdmin();
+    };
+
+    document.getElementById('fAdminProfile').onsubmit = async(e) => {
+      e.preventDefault();
+      const res = await fetch('/api/admin/update-profile', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          nama_lengkap: document.getElementById('admNama').value,
+          username: document.getElementById('admUsr').value,
+          password: document.getElementById('admPwd').value
+        })
+      });
+      const o = await res.json();
+      alert(o.msg);
+      if(o.ok) { document.getElementById('admPwd').value = ''; loadAdmin(); }
     };
 
     function bukaEdit(id) {

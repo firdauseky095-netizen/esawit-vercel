@@ -40,7 +40,6 @@ router.get('/data', async (req, res) => {
   });
 });
 
-// KHUSUS ADMIN: Hanya Admin yang menentukan harga TBS harian
 router.post('/harga-tbs', async (req, res) => {
   const user = getUser(req);
   if (!user || user.role !== 'ADMIN') {
@@ -74,7 +73,7 @@ router.post('/login', async (req, res) => {
 
   const sid = 'sid_' + Date.now() + '_' + Math.random().toString(36).substring(2);
   sessions[sid] = found;
-  res.setHeader('Set-Cookie', `esawit_sid=${sid}; Path=/; HttpOnly`);
+  res.setHeader('Set-Cookie', `esawit_sid=${sid}; Path=/; HttpOnly; SameSite=Lax`);
 
   let red = '/';
   if (found.role === 'ADMIN') red = '/admin';
@@ -102,6 +101,33 @@ router.post('/register', async (req, res) => {
     db.fallbackUsers.unshift({ id_user: Date.now(), nip, nama_lengkap, username, password, role, afdeling_tugas, status_akun: 'PENDING', waktu_daftar: waktu });
   }
   res.json({ ok: true, msg: 'Pendaftaran berhasil dikirim! Menunggu persetujuan Admin.' });
+});
+
+// ENDPOINT UPDATE PROFIL ADMIN SENDIRI
+router.post('/admin/update-profile', async (req, res) => {
+  const user = getUser(req);
+  if (!user || user.role !== 'ADMIN') return res.status(403).json({ ok: false, msg: 'Akses ditolak!' });
+  const { nama_lengkap, username, password } = req.body;
+
+  user.nama_lengkap = nama_lengkap;
+  user.username = username;
+  if (password && password.trim() !== '') user.password = password;
+
+  if (db.isMySQL()) {
+    if (password && password.trim() !== '') {
+      await db.getPool().query("UPDATE users SET nama_lengkap=?, username=?, password=? WHERE id_user=?", [nama_lengkap, username, password, user.id_user]);
+    } else {
+      await db.getPool().query("UPDATE users SET nama_lengkap=?, username=? WHERE id_user=?", [nama_lengkap, username, user.id_user]);
+    }
+  } else {
+    const target = db.fallbackUsers.find(u => u.id_user === user.id_user);
+    if (target) {
+      target.nama_lengkap = nama_lengkap;
+      target.username = username;
+      if (password && password.trim() !== '') target.password = password;
+    }
+  }
+  res.json({ ok: true, msg: 'Profil berhasil diperbarui!' });
 });
 
 router.post('/admin/create-user', async (req, res) => {
@@ -174,7 +200,7 @@ router.post('/operator/timbang', async (req, res) => {
   const user = getUser(req);
   if (!user || (user.role !== 'OPERATOR' && user.role !== 'ADMIN')) return res.status(403).json({ ok: false });
   const { id_transaksi, bruto, tara, potongan } = req.body;
-  const hargaDipakai = db.getHarga().harga_per_kg; // Operator mengikuti harga dari Admin
+  const hargaDipakai = db.getHarga().harga_per_kg;
   const selisih = Math.max(0, parseInt(bruto) - parseInt(tara));
   const potKg = Math.round(selisih * ((parseInt(potongan) || 0) / 100));
   const netto = selisih - potKg;
