@@ -2,15 +2,73 @@ const express = require('express');
 const router = express.Router();
 const db = require('../includes/db');
 
-const sessions = {};
+function parseCookies(req) {
+  const list = {};
+  const rc = req.headers.cookie;
+  if (rc) {
+    rc.split(';').forEach(cookie => {
+      const parts = cookie.split('=');
+      const key = parts.shift().trim();
+      const val = parts.join('=');
+      list[key] = val;
+    });
+  }
+  return list;
+}
+
+function encodeBase64(obj) {
+  return encodeURIComponent(Buffer.from(JSON.stringify(obj), 'utf8').toString('base64'));
+}
+
+function decodeBase64(str) {
+  try {
+    return JSON.parse(Buffer.from(decodeURIComponent(str), 'base64').toString('utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+// Sinkronisasi profil Admin & Harga dari Cookie agar tidak pernah hilang di Vercel
+function syncFromCookies(req) {
+  const cookies = parseCookies(req);
+  if (cookies.esawit_adm_sync) {
+    const adm = decodeBase64(cookies.esawit_adm_sync);
+    if (adm && adm.username) {
+      const target = db.fallbackUsers.find(u => u.role === 'ADMIN' || u.id_user === 1);
+      if (target) {
+        target.nama_lengkap = adm.nama_lengkap;
+        target.username = adm.username;
+        target.password = adm.password;
+      }
+    }
+  }
+  if (cookies.esawit_hrg_sync) {
+    const hrg = decodeBase64(cookies.esawit_hrg_sync);
+    if (hrg && hrg.harga_per_kg) {
+      const cur = db.getHarga();
+      cur.harga_per_kg = hrg.harga_per_kg;
+      cur.terakhir_diubah = hrg.terakhir_diubah;
+      cur.diubah_oleh = hrg.diubah_oleh;
+    }
+  }
+}
 
 function getUser(req) {
-  const cookie = req.headers.cookie || '';
-  const match = cookie.match(/esawit_user=([^;]+)/);
-  if (match) {
-    try {
-      return JSON.parse(Buffer.from(decodeURIComponent(match[1]), 'base64').toString('utf8'));
-    } catch (e) { return null; }
+  syncFromCookies(req);
+  const cookies = parseCookies(req);
+  if (cookies.esawit_user) {
+    const u = decodeBase64(cookies.esawit_user);
+    if (u && u.role) {
+      // Jika ADMIN, pastikan selalu menggunakan nama & username terbaru
+      if (u.role === 'ADMIN') {
+        const adm = db.fallbackUsers.find(x => x.role === 'ADMIN' || x.id_user === 1);
+        if (adm) {
+          u.nama_lengkap = adm.nama_lengkap;
+          u.username = adm.username;
+        }
+      }
+      return u;
+    }
   }
   return null;
 }
@@ -32,6 +90,7 @@ async function getTrans() {
 }
 
 router.get('/data', async (req, res) => {
+  syncFromCookies(req);
   const user = getUser(req);
   const transaksi = await getTrans();
   const users = user && user.role === 'ADMIN' ? await getUsers() : [];
@@ -44,6 +103,7 @@ router.get('/data', async (req, res) => {
   });
 });
 
+// KHUSUS ADMIN: Penetapan Harga TBS Harian
 router.post('/harga-tbs', async (req, res) => {
   const user = getUser(req);
   if (!user || user.role !== 'ADMIN') {
@@ -62,20 +122,25 @@ router.post('/harga-tbs', async (req, res) => {
         t.harga_per_kg = hargaBaru;
         if (t.status_tiket === 'SELESAI_TIMBANG') t.total_harga = t.berat_netto * hargaBaru;
       });
+      db.saveStore();
     }
   }
+
+  const hrgToken = encodeBase64(db.getHarga());
+  res.setHeader('Set-Cookie', `esawit_hrg_sync=${hrgToken}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax`);
   res.json({ ok: true, settingHarga: db.getHarga() });
 });
 
 router.post('/login', async (req, res) => {
+  syncFromCookies(req);
   const { username, password } = req.body;
   const users = await getUsers();
   const found = users.find(u => u.username === username && u.password === password);
-  if (!found) return res.json({ ok: false, msg: 'Username / Password salah!' });
+  if (!found) return res.json({ ok: false, msg: 'Username atau Kata Sandi salah!' });
   if (found.status_akun === 'PENDING') return res.json({ ok: false, msg: 'AKSES DITOLAK: Akun masih PENDING, menunggu persetujuan Admin!' });
   if (found.status_akun === 'BLOCKED') return res.json({ ok: false, msg: 'AKSES DIBLOKIR oleh Admin!' });
 
-  const token = encodeURIComponent(Buffer.from(JSON.stringify(found)).toString('base64'));
+  const token = encodeBase64(found);
   res.setHeader('Set-Cookie', `esawit_user=${token}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`);
 
   let red = '/';
@@ -86,8 +151,64 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-  res.setHeader('Set-Cookie', 'esawit_user=; Path=/; Max-Age=0');
+  res.setHeader('Set-Cookie', 'esawit_user=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
   res.redirect('/');
+});
+
+// UPDATE PROFIL ADMIN (Ganti Nama, Username, dan Sandi Admin)
+router.post('/admin/update-profile', async (req, res) => {
+  const user = getUser(req);
+  if (!user || user.role !== 'ADMIN') return res.status(403).json({ ok: false, msg: 'Akses ditolak!' });
+
+  const namaBaru = (req.body.nama_lengkap || '').trim();
+  const usrBaru = (req.body.username || '').trim();
+  const pwdBaru = (req.body.password || '').trim();
+
+  if (!namaBaru || !usrBaru) {
+    return res.json({ ok: false, msg: 'Nama lengkap dan username tidak boleh kosong!' });
+  }
+
+  let sandiFinal = user.password || '123';
+  const target = db.fallbackUsers.find(u => u.role === 'ADMIN' || u.id_user === 1);
+  if (target) {
+    sandiFinal = pwdBaru !== '' ? pwdBaru : target.password;
+    target.nama_lengkap = namaBaru;
+    target.username = usrBaru;
+    target.password = sandiFinal;
+    db.saveStore();
+  }
+
+  if (db.isMySQL()) {
+    try {
+      if (pwdBaru !== '') {
+        await db.getPool().query("UPDATE users SET nama_lengkap=?, username=?, password=? WHERE role='ADMIN'", [namaBaru, usrBaru, pwdBaru]);
+      } else {
+        await db.getPool().query("UPDATE users SET nama_lengkap=?, username=? WHERE role='ADMIN'", [namaBaru, usrBaru]);
+      }
+    } catch (e) {}
+  }
+
+  const updatedUser = {
+    ...user,
+    nama_lengkap: namaBaru,
+    username: usrBaru,
+    password: sandiFinal
+  };
+
+  const userCookie = encodeBase64(updatedUser);
+  const syncCookie = encodeBase64({
+    id_user: 1,
+    nama_lengkap: namaBaru,
+    username: usrBaru,
+    password: sandiFinal
+  });
+
+  res.setHeader('Set-Cookie', [
+    `esawit_user=${userCookie}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`,
+    `esawit_adm_sync=${syncCookie}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax`
+  ]);
+
+  res.json({ ok: true, msg: 'Profil Admin berhasil diperbarui dan disimpan!', user: updatedUser });
 });
 
 router.post('/register', async (req, res) => {
@@ -99,37 +220,9 @@ router.post('/register', async (req, res) => {
     } catch(e) { return res.json({ ok: false, msg: 'Username sudah terdaftar!' }); }
   } else {
     db.fallbackUsers.unshift({ id_user: Date.now(), nip, nama_lengkap, username, password, role, afdeling_tugas, status_akun: 'PENDING', waktu_daftar: waktu });
+    db.saveStore();
   }
   res.json({ ok: true, msg: 'Pendaftaran berhasil dikirim! Menunggu persetujuan Admin.' });
-});
-
-// ENDPOINT UPDATE PROFIL ADMIN SENDIRI
-router.post('/admin/update-profile', async (req, res) => {
-  const user = getUser(req);
-  if (!user || user.role !== 'ADMIN') return res.status(403).json({ ok: false, msg: 'Akses ditolak!' });
-  const { nama_lengkap, username, password } = req.body;
-
-  user.nama_lengkap = nama_lengkap;
-  user.username = username;
-  if (password && password.trim() !== '') user.password = password;
-
-  if (db.isMySQL()) {
-    if (password && password.trim() !== '') {
-      await db.getPool().query("UPDATE users SET nama_lengkap=?, username=?, password=? WHERE id_user=?", [nama_lengkap, username, password, user.id_user]);
-    } else {
-      await db.getPool().query("UPDATE users SET nama_lengkap=?, username=? WHERE id_user=?", [nama_lengkap, username, user.id_user]);
-    }
-  } else {
-    const target = db.fallbackUsers.find(u => u.id_user === user.id_user);
-    if (target) {
-      target.nama_lengkap = nama_lengkap;
-      target.username = username;
-      if (password && password.trim() !== '') target.password = password;
-    }
-  }
-  const newToken = encodeURIComponent(Buffer.from(JSON.stringify(user)).toString('base64'));
-  res.setHeader('Set-Cookie', `esawit_user=${newToken}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`);
-  res.json({ ok: true, msg: 'Profil berhasil diperbarui!' });
 });
 
 router.post('/admin/create-user', async (req, res) => {
@@ -141,6 +234,7 @@ router.post('/admin/create-user', async (req, res) => {
     await db.getPool().query("INSERT INTO users (nip, nama_lengkap, username, password, role, afdeling_tugas, status_akun, waktu_daftar) VALUES (?,?,?,?,?,?,'APPROVED',?)", [nip, nama_lengkap, username, password, role, afdeling_tugas, waktu]);
   } else {
     db.fallbackUsers.unshift({ id_user: Date.now(), nip, nama_lengkap, username, password, role, afdeling_tugas, status_akun: 'APPROVED', waktu_daftar: waktu });
+    db.saveStore();
   }
   res.json({ ok: true });
 });
@@ -151,12 +245,16 @@ router.post('/admin/user-status', async (req, res) => {
   const { id_user, aksi } = req.body;
   if (aksi === 'DELETE') {
     if (db.isMySQL()) await db.getPool().query("DELETE FROM users WHERE id_user = ? AND role != 'ADMIN'", [id_user]);
-    else db.fallbackUsers = db.fallbackUsers.filter(u => u.id_user !== parseInt(id_user) || u.role === 'ADMIN');
+    else {
+      db.fallbackUsers = db.fallbackUsers.filter(u => u.id_user !== parseInt(id_user) || u.role === 'ADMIN');
+      db.saveStore();
+    }
   } else {
     if (db.isMySQL()) await db.getPool().query("UPDATE users SET status_akun = ? WHERE id_user = ?", [aksi, id_user]);
     else {
       const t = db.fallbackUsers.find(u => u.id_user === parseInt(id_user));
       if (t) t.status_akun = aksi;
+      db.saveStore();
     }
   }
   res.json({ ok: true });
@@ -175,6 +273,7 @@ router.post('/mandor/spb', async (req, res) => {
     await db.getPool().query("INSERT INTO transaksi_timbangan (no_tiket, nama_afdeling, nama_mandor, plat_nomor, nama_sopir, jumlah_janjang, harga_per_kg, status_tiket, operator_timbang, waktu_input) VALUES (?,?,?,?,?,?,?,'DIKIRIM_MANDOR','Menunggu',?)", [tiket, afdeling, mandor, plat.toUpperCase(), sopir, parseInt(janjang), hargaAktif, waktu]);
   } else {
     db.fallbackTransaksi.unshift({ id_transaksi: Date.now(), no_tiket: tiket, nama_afdeling: afdeling, nama_mandor: mandor, plat_nomor: plat.toUpperCase(), nama_sopir: sopir, jumlah_janjang: parseInt(janjang), berat_bruto: 0, berat_tara: 0, potongan_persen: 0, berat_netto: 0, harga_per_kg: hargaAktif, total_harga: 0, status_tiket: 'DIKIRIM_MANDOR', operator_timbang: 'Menunggu', waktu_input: waktu });
+    db.saveStore();
   }
   res.json({ ok: true });
 });
@@ -193,6 +292,7 @@ router.post('/mandor/edit-spb', async (req, res) => {
       item.plat_nomor = plat.toUpperCase();
       item.nama_sopir = sopir;
       item.jumlah_janjang = parseInt(janjang);
+      db.saveStore();
     }
   }
   res.json({ ok: true });
@@ -222,6 +322,7 @@ router.post('/operator/timbang', async (req, res) => {
       item.total_harga = total;
       item.status_tiket = 'SELESAI_TIMBANG';
       item.operator_timbang = op;
+      db.saveStore();
     }
   }
   res.json({ ok: true });
@@ -250,6 +351,7 @@ router.post('/admin/edit-full', async (req, res) => {
       item.jumlah_janjang = parseInt(janjang); item.berat_bruto = parseInt(bruto); item.berat_tara = parseInt(tara);
       item.potongan_persen = parseInt(potongan); item.berat_netto = netto; item.harga_per_kg = hrg;
       item.total_harga = total; item.status_tiket = status;
+      db.saveStore();
     }
   }
   res.json({ ok: true });
@@ -273,6 +375,7 @@ router.post('/delete-transaksi', async (req, res) => {
       if (user.role === 'MANDOR' && t.status_tiket === 'DIKIRIM_MANDOR') return false;
       return true;
     });
+    db.saveStore();
   }
   res.json({ ok: true });
 });

@@ -12,7 +12,6 @@ input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; bord
 button, .btn { background: #16a34a; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12.5px; text-decoration: none; display: inline-block; text-align: center; }
 button:hover, .btn:hover { opacity: 0.92; }
 
-/* Bungkus Tabel */
 .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background: white; }
 table { width: 100%; border-collapse: collapse; background: white; min-width: 650px; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 12.5px; }
@@ -22,30 +21,32 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 .bg-warn { background: #fef3c7; color: #b45309; }
 .bg-err { background: #fee2e2; color: #dc2626; }
 
-/* Perbaikan Posisi & Ukuran Tombol Mata Password di HP */
-.pass-wrap { position: relative; display: flex; align-items: center; width: 100%; }
-.pass-wrap input { width: 100%; padding-right: 40px; }
-.eye-btn {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  padding: 0;
+/* Tombol Mata Password Proporsional & Mudah Diklik di HP */
+.pass-wrap { position: relative !important; display: block !important; width: 100% !important; }
+.pass-wrap input { width: 100% !important; padding-right: 38px !important; }
+button.eye-btn {
+  position: absolute !important;
+  right: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5 !important;
+  cursor: pointer !important;
 }
-.eye-btn svg { width: 16px; height: 16px; }
-.eye-btn:hover { color: #0f172a; }
+button.eye-btn svg { width: 16px !important; height: 16px !important; pointer-events: none; }
+button.eye-btn:hover { color: #0f172a !important; }
 
-/* Menu Titik Tiga (Kebab Menu) */
 .header-right-wrap { display: flex; align-items: center; gap: 10px; position: relative; flex-shrink: 0; }
 .kebab-container { position: relative; display: inline-block; }
 .kebab-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
@@ -60,12 +61,10 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 .kebab-item.locked { color: #94a3b8; cursor: not-allowed; background: #fcfcfc; font-weight: 400; }
 .kebab-item.danger { color: #dc2626; font-weight: 700; }
 
-/* Modal Popup */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.55); z-index: 10000; align-items: center; justify-content: center; padding: 15px; }
 .modal-overlay.active { display: flex; }
 .modal-card { background: white; width: 100%; max-width: 520px; border-radius: 12px; padding: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
 
-/* Grid Form */
 .form-login-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
 .form-reg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: end; }
 .form-spb-grid { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: end; }
@@ -89,26 +88,3 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 @media (max-width: 420px) {
   .cards { grid-template-columns: 1fr; }
 }
-
-/* Fix Mutlak Ikon Mata di Layar HP */
-.pass-wrap { position: relative !important; display: block !important; width: 100% !important; }
-.pass-wrap input { width: 100% !important; padding-right: 38px !important; box-sizing: border-box !important; }
-button.eye-btn {
-  position: absolute !important;
-  right: 4px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 30px !important;
-  height: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 5 !important;
-}
-button.eye-btn svg { width: 15px !important; height: 15px !important; pointer-events: none; }
