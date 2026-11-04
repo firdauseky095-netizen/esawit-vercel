@@ -82,10 +82,33 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
   .card h2 { font-size: 17px; }
   .grid-2 { grid-template-columns: 1fr; gap: 14px; }
   .form-login-grid, .form-reg-grid, .form-spb-grid, .form-2col-grid { grid-template-columns: 1fr !important; }
-  .form-login-grid button, .form-spb-grid button { width: 100%; }
+  .form-login-grid button[type="submit"], .form-spb-grid button[type="submit"] { width: 100%; }
   .box { padding: 15px; }
 }
 
 @media (max-width: 420px) {
   .cards { grid-template-columns: 1fr; }
 }
+
+/* Fix Mutlak Ikon Mata di Layar HP */
+.pass-wrap { position: relative !important; display: block !important; width: 100% !important; }
+.pass-wrap input { width: 100% !important; padding-right: 38px !important; box-sizing: border-box !important; }
+button.eye-btn {
+  position: absolute !important;
+  right: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5 !important;
+}
+button.eye-btn svg { width: 15px !important; height: 15px !important; pointer-events: none; }

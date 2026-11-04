@@ -6,8 +6,12 @@ const sessions = {};
 
 function getUser(req) {
   const cookie = req.headers.cookie || '';
-  const match = cookie.match(/esawit_sid=([^;]+)/);
-  if (match && sessions[match[1]]) return sessions[match[1]];
+  const match = cookie.match(/esawit_user=([^;]+)/);
+  if (match) {
+    try {
+      return JSON.parse(Buffer.from(decodeURIComponent(match[1]), 'base64').toString('utf8'));
+    } catch (e) { return null; }
+  }
   return null;
 }
 
@@ -71,9 +75,8 @@ router.post('/login', async (req, res) => {
   if (found.status_akun === 'PENDING') return res.json({ ok: false, msg: 'AKSES DITOLAK: Akun masih PENDING, menunggu persetujuan Admin!' });
   if (found.status_akun === 'BLOCKED') return res.json({ ok: false, msg: 'AKSES DIBLOKIR oleh Admin!' });
 
-  const sid = 'sid_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-  sessions[sid] = found;
-  res.setHeader('Set-Cookie', `esawit_sid=${sid}; Path=/; HttpOnly; SameSite=Lax`);
+  const token = encodeURIComponent(Buffer.from(JSON.stringify(found)).toString('base64'));
+  res.setHeader('Set-Cookie', `esawit_user=${token}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`);
 
   let red = '/';
   if (found.role === 'ADMIN') red = '/admin';
@@ -83,10 +86,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-  const cookie = req.headers.cookie || '';
-  const match = cookie.match(/esawit_sid=([^;]+)/);
-  if (match) delete sessions[match[1]];
-  res.setHeader('Set-Cookie', 'esawit_sid=; Path=/; Max-Age=0');
+  res.setHeader('Set-Cookie', 'esawit_user=; Path=/; Max-Age=0');
   res.redirect('/');
 });
 
@@ -127,6 +127,8 @@ router.post('/admin/update-profile', async (req, res) => {
       if (password && password.trim() !== '') target.password = password;
     }
   }
+  const newToken = encodeURIComponent(Buffer.from(JSON.stringify(user)).toString('base64'));
+  res.setHeader('Set-Cookie', `esawit_user=${newToken}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax`);
   res.json({ ok: true, msg: 'Profil berhasil diperbarui!' });
 });
 
