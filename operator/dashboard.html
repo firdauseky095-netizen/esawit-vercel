@@ -12,35 +12,18 @@
     <div><a href="/" class="btn" style="background:#475569;">Portal Publik</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a></div>
   </div>
 
-  <div class="grid-2">
-    <div class="box" style="border-top:4px solid #2563eb;">
-      <h3 style="margin-top:0;color:#1e40af;">⚖️ Input Penimbangan Truk (Antrean maupun Koreksi)</h3>
-      <form id="fTim" class="form-2col-grid">
-        <div class="span-full">
-          <label>Pilih Tiket Truk (Antrean Baru / Koreksi Ulang)</label>
-          <select id="otId" required></select>
-        </div>
-        <div><label>Berat Bruto / Isi (Kg)</label><input type="number" id="otB" placeholder="15200" required></div>
-        <div><label>Berat Tara / Kosong (Kg)</label><input type="number" id="otT" placeholder="6200" required></div>
-        <div><label>Potongan Sortasi (%)</label><input type="number" id="otP" value="2" required></div>
-        <div><label>Harga TBS / Kg (Rp)</label><input type="number" id="otH" required></div>
-        <div class="span-full"><button type="submit" style="background:#2563eb;width:100%;">💾 Simpan & Hitung Otomatis Nilai TBS</button></div>
-      </form>
-    </div>
-
-    <div class="box" style="border-top:4px solid #eab308;">
-      <h3 style="margin-top:0;color:#854d0e;">💰 Update Harga Papan TBS Pabrik Hari Ini (Rp/Kg)</h3>
-      <p style="font-size:12px;color:#64748b;margin-top:0;">Sesuaikan harga beli TBS kelapa sawit per kilogram hari ini sesuai ketetapan pabrik/dinas:</p>
-      <form id="fHargaOp" class="form-2col-grid">
-        <div><label>Harga Beli TBS Hari Ini (Rp / Kg)</label><input type="number" id="opHargaBaru" required></div>
-        <div><button type="submit" style="background:#ca8a04;width:100%;">Update Harga</button></div>
-      </form>
-      <div style="margin-top:10px;font-size:12px;">
-        <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer;">
-          <input type="checkbox" id="opUpdateSemua" checked style="width:auto;"> Terapkan ke seluruh transaksi hari ini
-        </label>
+  <div class="box" style="border-top:4px solid #2563eb;">
+    <h3 style="margin-top:0;color:#1e40af;">⚖️ Input Penimbangan Truk (Antrean maupun Koreksi)</h3>
+    <form id="fTim" class="form-2col-grid">
+      <div class="span-full">
+        <label>Pilih Tiket Truk (Antrean Baru / Koreksi Ulang)</label>
+        <select id="otId" required></select>
       </div>
-    </div>
+      <div><label>Berat Bruto / Isi (Kg)</label><input type="number" id="otB" placeholder="15200" required></div>
+      <div><label>Berat Tara / Kosong (Kg)</label><input type="number" id="otT" placeholder="6200" required></div>
+      <div class="span-full"><label>Potongan Sortasi (%)</label><input type="number" id="otP" value="2" required></div>
+      <div class="span-full"><button type="submit" style="background:#2563eb;width:100%;">💾 Simpan & Hitung Otomatis Nilai TBS (Sesuai Ketetapan Harga Admin)</button></div>
+    </form>
   </div>
 
   <div class="box">
@@ -61,9 +44,7 @@
       if (!d.user || (d.user.role !== 'OPERATOR' && d.user.role !== 'ADMIN')) { window.location.href = '/'; return; }
       listTrans = d.transaksi;
 
-      document.getElementById('oInfo').innerText = 'Operator: ' + d.user.nama_lengkap + ' | Harga Aktif: Rp ' + fmt(d.settingHarga.harga_per_kg) + '/Kg';
-      document.getElementById('opHargaBaru').value = d.settingHarga.harga_per_kg;
-      document.getElementById('otH').value = d.settingHarga.harga_per_kg;
+      document.getElementById('oInfo').innerText = 'Operator: ' + d.user.nama_lengkap + ' | Harga Beli TBS Resmi (Admin): Rp ' + fmt(d.settingHarga.harga_per_kg) + '/Kg';
 
       document.getElementById('otId').innerHTML = d.transaksi.map(t => `
         <option value="${t.id_transaksi}">[${t.status_tiket === 'DIKIRIM_MANDOR' ? 'ANTRE' : 'KOREKSI'}] ${t.no_tiket} — ${t.plat_nomor} (${t.jumlah_janjang} Janjang)</option>
@@ -80,7 +61,7 @@
           <td>${fmt(t.berat_tara)} Kg</td>
           <td>${t.potongan_persen}%</td>
           <td style="color:#15803d;font-weight:bold;">${fmt(t.berat_netto)} Kg</td>
-          <td>Rp ${fmt(t.harga_per_kg || d.settingHarga.harga_per_kg)}</td>
+          <td>Rp {{fmt(t.harga_per_kg || d.settingHarga.harga_per_kg)}</td>
           <td style="color:#1d4ed8;font-weight:bold;">Rp ${fmt(t.total_harga)}</td>
           <td style="white-space:nowrap;"><button onclick="pilihKoreksi(${t.id_transaksi})" style="background:#2563eb;padding:4px 8px;font-size:11px;">✏️ Koreksi Timbang</button></td>
         </tr>
@@ -94,7 +75,6 @@
       document.getElementById('otB').value = t.berat_bruto || '';
       document.getElementById('otT').value = t.berat_tara || '';
       document.getElementById('otP').value = t.potongan_persen || 0;
-      document.getElementById('otH').value = t.harga_per_kg || document.getElementById('opHargaBaru').value;
       document.getElementById('otB').focus();
     }
 
@@ -106,25 +86,11 @@
           id_transaksi: document.getElementById('otId').value,
           bruto: document.getElementById('otB').value,
           tara: document.getElementById('otT').value,
-          potongan: document.getElementById('otP').value,
-          harga_custom: document.getElementById('otH').value
+          potongan: document.getElementById('otP').value
         })
       });
       document.getElementById('otB').value = '';
       document.getElementById('otT').value = '';
-      loadOp();
-    };
-
-    document.getElementById('fHargaOp').onsubmit = async(e) => {
-      e.preventDefault();
-      await fetch('/api/harga-tbs', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          harga_per_kg: document.getElementById('opHargaBaru').value,
-          update_semua: document.getElementById('opUpdateSemua').checked
-        })
-      });
-      alert('Harga papan TBS berhasil diperbarui!');
       loadOp();
     };
 

@@ -8,8 +8,8 @@ body { background: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
 .box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow-x: auto; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
 label { font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 5px; }
-input, select { width: 100%; padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
-button, .btn { background: #16a34a; color: white; border: none; padding: 9px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12.5px; text-decoration: none; display: inline-block; text-align: center; }
+input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #fff; }
+button, .btn { background: #16a34a; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12.5px; text-decoration: none; display: inline-block; text-align: center; }
 button:hover, .btn:hover { opacity: 0.92; }
 
 /* Bungkus Tabel agar bisa di-scroll ke samping di HP */
@@ -22,11 +22,26 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 .bg-warn { background: #fef3c7; color: #b45309; }
 .bg-err { background: #fee2e2; color: #dc2626; }
 
-/* Input Password & Ikon Mata Formal */
-.pass-wrap { position: relative; display: flex; align-items: center; }
-.pass-wrap input { padding-right: 38px; }
-.eye-btn { position: absolute; right: 8px; background: transparent; border: none; padding: 4px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; }
-.eye-btn:hover { color: #0f172a; background: transparent; }
+/* Perbaikan Posisi Tombol Mata (Agar Mudah Diklik di HP & Tidak Menghalangi Teks) */
+.pass-wrap { position: relative; display: flex; align-items: center; width: 100%; }
+.pass-wrap input { width: 100%; padding-right: 44px; }
+.eye-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.eye-btn:hover { color: #0f172a; background: #f1f5f9; border-radius: 50%; }
 
 /* Menu Titik Tiga (Kebab Menu) */
 .header-right-wrap { display: flex; align-items: center; gap: 10px; position: relative; flex-shrink: 0; }
@@ -55,7 +70,6 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 .form-2col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
 .span-full { grid-column: 1 / -1; }
 
-/* PENGATURAN KHUSUS LAYAR HP & TABLET (RESPONSIVE MOBILE) */
 @media (max-width: 768px) {
   body { padding: 10px; }
   .header { flex-direction: column; align-items: flex-start; padding: 15px; }

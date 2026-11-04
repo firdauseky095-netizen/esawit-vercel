@@ -40,18 +40,17 @@ router.get('/data', async (req, res) => {
   });
 });
 
-// Update Harga TBS Harian (Bisa diubah oleh ADMIN atau OPERATOR setiap hari)
+// KHUSUS ADMIN: Hanya Admin yang menentukan harga TBS harian
 router.post('/harga-tbs', async (req, res) => {
   const user = getUser(req);
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'OPERATOR')) {
-    return res.status(403).json({ ok: false, msg: 'Hanya Admin atau Operator yang berhak mengubah harga TBS harian!' });
+  if (!user || user.role !== 'ADMIN') {
+    return res.status(403).json({ ok: false, msg: 'Hanya Admin yang berhak menetapkan harga TBS harian!' });
   }
   const hargaBaru = parseInt(req.body.harga_per_kg);
   if (!hargaBaru || hargaBaru < 100) return res.json({ ok: false, msg: 'Harga tidak valid!' });
 
   db.setHarga(hargaBaru, `${user.nama_lengkap} (${user.role})`);
 
-  // Jika ingin langsung memperbarui estimasi harga transaksi hari ini sesuai harga terbaru:
   if (req.body.update_semua === true) {
     if (db.isMySQL()) {
       await db.getPool().query("UPDATE transaksi_timbangan SET harga_per_kg = ?, total_harga = berat_netto * ? WHERE status_tiket = 'SELESAI_TIMBANG'", [hargaBaru, hargaBaru]);
@@ -135,7 +134,6 @@ router.post('/admin/user-status', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Mandor Kirim SPB Baru
 router.post('/mandor/spb', async (req, res) => {
   const user = getUser(req);
   if (!user || (user.role !== 'MANDOR' && user.role !== 'ADMIN')) return res.status(403).json({ ok: false });
@@ -153,7 +151,6 @@ router.post('/mandor/spb', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Mandor / Admin Edit Data SPB (Jika salah input plat, sopir, atau janjang)
 router.post('/mandor/edit-spb', async (req, res) => {
   const user = getUser(req);
   if (!user || (user.role !== 'MANDOR' && user.role !== 'ADMIN')) return res.status(403).json({ ok: false });
@@ -173,12 +170,11 @@ router.post('/mandor/edit-spb', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Operator / Admin Simpan atau Koreksi (Update) Hasil Timbangan & Harga
 router.post('/operator/timbang', async (req, res) => {
   const user = getUser(req);
   if (!user || (user.role !== 'OPERATOR' && user.role !== 'ADMIN')) return res.status(403).json({ ok: false });
-  const { id_transaksi, bruto, tara, potongan, harga_custom } = req.body;
-  const hargaDipakai = harga_custom ? parseInt(harga_custom) : db.getHarga().harga_per_kg;
+  const { id_transaksi, bruto, tara, potongan } = req.body;
+  const hargaDipakai = db.getHarga().harga_per_kg; // Operator mengikuti harga dari Admin
   const selisih = Math.max(0, parseInt(bruto) - parseInt(tara));
   const potKg = Math.round(selisih * ((parseInt(potongan) || 0) / 100));
   const netto = selisih - potKg;
@@ -203,7 +199,6 @@ router.post('/operator/timbang', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Admin Edit Penuh atau Hapus Transaksi
 router.post('/admin/edit-full', async (req, res) => {
   const user = getUser(req);
   if (!user || user.role !== 'ADMIN') return res.status(403).json({ ok: false });
@@ -237,7 +232,6 @@ router.post('/delete-transaksi', async (req, res) => {
   if (!user) return res.status(403).json({ ok: false });
   const id = parseInt(req.body.id_transaksi);
 
-  // Admin boleh hapus semua; Mandor hanya boleh hapus tiket yang belum ditimbang
   if (db.isMySQL()) {
     if (user.role === 'ADMIN') {
       await db.getPool().query('DELETE FROM transaksi_timbangan WHERE id_transaksi = ?', [id]);
