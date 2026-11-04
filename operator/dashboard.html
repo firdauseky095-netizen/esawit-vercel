@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Dashboard Operator Timbang — e-Sawit Cloud</title><link rel="stylesheet" href="/assets/style.css"></head>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Operator Timbang — e-Sawit Cloud</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
 <body>
   <div class="header" style="background:linear-gradient(135deg, #1e3a8a, #2563eb);">
     <div><h2 style="margin:0;">⚖️ Dashboard Operator Jembatan Timbang PKS</h2><small id="oInfo"></small></div>
@@ -8,11 +13,10 @@
   </div>
 
   <div class="grid-2">
-    <!-- FORM INPUT TIMBANGAN TRUK MASUK -->
     <div class="box" style="border-top:4px solid #2563eb;">
       <h3 style="margin-top:0;color:#1e40af;">⚖️ Input Penimbangan Truk (Antrean maupun Koreksi)</h3>
-      <form id="fTim" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;">
-        <div style="grid-column:span 2;">
+      <form id="fTim" class="form-2col-grid">
+        <div class="span-full">
           <label>Pilih Tiket Truk (Antrean Baru / Koreksi Ulang)</label>
           <select id="otId" required></select>
         </div>
@@ -20,17 +24,16 @@
         <div><label>Berat Tara / Kosong (Kg)</label><input type="number" id="otT" placeholder="6200" required></div>
         <div><label>Potongan Sortasi (%)</label><input type="number" id="otP" value="2" required></div>
         <div><label>Harga TBS / Kg (Rp)</label><input type="number" id="otH" required></div>
-        <div style="grid-column:span 2;"><button type="submit" style="background:#2563eb;width:100%;">💾 Simpan & Hitung Otomatis Nilai TBS</button></div>
+        <div class="span-full"><button type="submit" style="background:#2563eb;width:100%;">💾 Simpan & Hitung Otomatis Nilai TBS</button></div>
       </form>
     </div>
 
-    <!-- PENGATURAN HARGA HARIAN OLEH OPERATOR / PAPAN HARGA PKS -->
     <div class="box" style="border-top:4px solid #eab308;">
       <h3 style="margin-top:0;color:#854d0e;">💰 Update Harga Papan TBS Pabrik Hari Ini (Rp/Kg)</h3>
       <p style="font-size:12px;color:#64748b;margin-top:0;">Sesuaikan harga beli TBS kelapa sawit per kilogram hari ini sesuai ketetapan pabrik/dinas:</p>
-      <form id="fHargaOp" style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;">
+      <form id="fHargaOp" class="form-2col-grid">
         <div><label>Harga Beli TBS Hari Ini (Rp / Kg)</label><input type="number" id="opHargaBaru" required></div>
-        <div><button type="submit" style="background:#ca8a04;">Update Harga</button></div>
+        <div><button type="submit" style="background:#ca8a04;width:100%;">Update Harga</button></div>
       </form>
       <div style="margin-top:10px;font-size:12px;">
         <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer;">
@@ -42,10 +45,12 @@
 
   <div class="box">
     <h3 style="margin-top:0;">📊 Rekapitulasi Timbangan Pabrik (Klik ✏️ Koreksi Timbang jika Salah Input Angka)</h3>
-    <table>
-      <thead><tr><th>Tiket</th><th>Status</th><th>Afdeling</th><th>Truk & Sopir</th><th>Janjang</th><th>Bruto</th><th>Tara</th><th>Sortasi</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th><th>Aksi</th></tr></thead>
-      <tbody id="tOp"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tiket</th><th>Status</th><th>Afdeling</th><th>Truk & Sopir</th><th>Janjang</th><th>Bruto</th><th>Tara</th><th>Sortasi</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th><th>Aksi</th></tr></thead>
+        <tbody id="tOp"></tbody>
+      </table>
+    </div>
   </div>
 
   <script src="/assets/script.js"></script>
@@ -77,7 +82,7 @@
           <td style="color:#15803d;font-weight:bold;">${fmt(t.berat_netto)} Kg</td>
           <td>Rp ${fmt(t.harga_per_kg || d.settingHarga.harga_per_kg)}</td>
           <td style="color:#1d4ed8;font-weight:bold;">Rp ${fmt(t.total_harga)}</td>
-          <td><button onclick="pilihKoreksi(${t.id_transaksi})" style="background:#2563eb;padding:4px 8px;font-size:11px;">✏️ Koreksi Timbang</button></td>
+          <td style="white-space:nowrap;"><button onclick="pilihKoreksi(${t.id_transaksi})" style="background:#2563eb;padding:4px 8px;font-size:11px;">✏️ Koreksi Timbang</button></td>
         </tr>
       `).join('');
     }

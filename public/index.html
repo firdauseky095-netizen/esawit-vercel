@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>e-Sawit Cloud — Portal Publik</title><link rel="stylesheet" href="/assets/style.css"></head>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>e-Sawit Cloud — Portal Publik</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
 <body>
   <div class="header">
     <div>
       <h2 style="margin:0;">🌴 e-Sawit Cloud — Sistem Informasi Panen & Timbangan TBS</h2>
       <small id="dbInfo"></small>
     </div>
-    <div id="navRole"><span class="badge" style="background:#475569;color:white;padding:7px 14px;border-radius:20px;">👁️ MODE PUBLIK (VIEW-ONLY)</span></div>
+    <div id="navRole"><span class="badge" style="background:#475569;color:white;padding:7px 12px;border-radius:20px;">👁️ MODE PUBLIK (VIEW-ONLY)</span></div>
   </div>
 
   <div class="cards">
@@ -20,45 +25,49 @@
   <div class="grid-2" id="boxLogin">
     <div class="box">
       <h3 style="margin-top:0;">🔑 Login Dashboard Khusus Petugas</h3>
-      <p style="font-size:12px;color:#64748b;margin-top:0;">Halaman Dashboard Admin, Mandor, dan Operator dikunci ketat dan hanya bisa dibuka setelah login.</p>
-      <form id="fLogin" style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
-        <div><label>Username</label><input type="text" id="lUser" value="admin" required></div>
+      <p style="font-size:12px;color:#64748b;margin-top:0;">Silakan masuk menggunakan akun resmi petugas (Admin, Mandor, atau Operator).</p>
+      <form id="fLogin" class="form-login-grid" autocomplete="off">
         <div>
-          <label>Password</label>
+          <label>Username Petugas</label>
+          <input type="text" id="lUser" placeholder="Masukkan username" autocomplete="off" required>
+        </div>
+        <div>
+          <label>Kata Sandi</label>
           <div class="pass-wrap">
-            <input type="password" id="lPass" value="123" required>
+            <input type="password" id="lPass" placeholder="Masukkan sandi" autocomplete="new-password" required>
             <button type="button" class="eye-btn" onclick="togglePassword('lPass', this)"></button>
           </div>
         </div>
         <div><button type="submit" style="background:#1e293b;">Masuk</button></div>
       </form>
-      <small style="display:block;margin-top:8px;color:#475569;">Demo (Sandi <code>123</code>): <code>admin</code> | <code>mandor1</code> | <code>operator1</code></small>
     </div>
 
     <div class="box" style="border-top:4px solid #ca8a04;">
       <h3 style="margin-top:0;">📝 Pengajuan Akun Petugas Baru (Verifikasi Admin)</h3>
-      <form id="fReg" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;align-items:end;">
+      <form id="fReg" class="form-reg-grid" autocomplete="off">
         <div><label>NIP</label><input type="text" id="rNip" placeholder="MND-05" required></div>
-        <div><label>Nama</label><input type="text" id="rNama" placeholder="Nama" required></div>
-        <div><label>Role</label><select id="rRole"><option value="MANDOR">Mandor</option><option value="OPERATOR">Operator</option></select></div>
-        <div><label>Lokasi</label><input type="text" id="rLokasi" placeholder="Afdeling 1" required></div>
-        <div><label>Username</label><input type="text" id="rUser" placeholder="userbaru" required></div>
+        <div><label>Nama Lengkap</label><input type="text" id="rNama" placeholder="Nama Petugas" required></div>
+        <div><label>Jabatan / Role</label><select id="rRole"><option value="MANDOR">Mandor Kebun</option><option value="OPERATOR">Operator Timbang</option></select></div>
+        <div><label>Lokasi Tugas</label><input type="text" id="rLokasi" placeholder="Afdeling 1" required></div>
+        <div><label>Username Baru</label><input type="text" id="rUser" placeholder="Buat username" autocomplete="off" required></div>
         <div>
-          <label>Password</label>
+          <label>Kata Sandi Baru</label>
           <div class="pass-wrap">
-            <input type="password" id="rPass" placeholder="123" required>
+            <input type="password" id="rPass" placeholder="Buat sandi" autocomplete="new-password" required>
             <button type="button" class="eye-btn" onclick="togglePassword('rPass', this)"></button>
           </div>
         </div>
-        <div style="grid-column:span 3;"><button type="submit" style="background:#ca8a04;width:100%;">Kirim Pengajuan ke Admin</button></div>
+        <div class="span-full"><button type="submit" style="background:#ca8a04;width:100%;">Kirim Pengajuan ke Admin</button></div>
       </form>
     </div>
   </div>
 
-  <table>
-    <thead><tr><th>Tiket & Waktu</th><th>Status</th><th>Afdeling & Mandor</th><th>Truk & Sopir</th><th>Janjang</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th></tr></thead>
-    <tbody id="tPublik"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tiket & Waktu</th><th>Status</th><th>Afdeling & Mandor</th><th>Truk & Sopir</th><th>Janjang</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th></tr></thead>
+      <tbody id="tPublik"></tbody>
+    </table>
+  </div>
 
   <script src="/assets/script.js"></script>
   <script>
@@ -69,7 +78,7 @@
       document.getElementById('cHargaInfo').innerText = 'Update: ' + d.settingHarga.terakhir_diubah;
 
       if (d.user) {
-        document.getElementById('navRole').innerHTML = `<a href="/${d.user.role.toLowerCase()}" class="btn" style="background:#22c55e;">Buka Dashboard ${d.user.role}</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a>`;
+        document.getElementById('navRole').innerHTML = `<a href="/${d.user.role.toLowerCase()}" class="btn" style="background:#22c55e;">Dashboard ${d.user.role}</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a>`;
       }
       let n=0, j=0, r=0;
       document.getElementById('tPublik').innerHTML = d.transaksi.map(t => {
