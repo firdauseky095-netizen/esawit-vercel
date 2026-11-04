@@ -1,0 +1,13 @@
+{
+  "name": "esawit-cloud",
+  "version": "1.0.0",
+  "description": "Sistem Informasi Panen dan Timbangan TBS Kelapa Sawit Berbasis Cloud & MySQL",
+  "main": "app_sawit.js",
+  "scripts": {
+    "start": "node app_sawit.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0"
+  }
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Dashboard Admin — e-Sawit Cloud</title><link rel="stylesheet" href="/assets/style.css"></head>
+<body>
+  <div class="header" style="background:linear-gradient(135deg, #4c1d95, #6d28d9);">
+    <div><h2 style="margin:0;">🛡️ Dashboard Otoritas Admin & Manajer Kebun</h2><small id="aInfo"></small></div>
+    <div><a href="/" class="btn" style="background:#475569;">Portal Publik</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- PANEL PENETAPAN HARGA TBS HARIAN -->
+    <div class="box" style="border-top:4px solid #eab308;">
+      <h3 style="margin-top:0;color:#854d0e;">💰 Penetapan Harga Buah TBS Harian (Rp / Kg)</h3>
+      <p style="font-size:12px;color:#64748b;margin-top:0;">Harga TBS dapat berubah setiap hari. Perubahan harga dapat langsung diterapkan ke seluruh rekapitulasi hari ini.</p>
+      <form id="fHarga" style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;">
+        <div>
+          <label>Harga TBS Hari Ini (Rp / Kg)</label>
+          <input type="number" id="inputHargaHarian" required>
+        </div>
+        <div>
+          <button type="submit" style="background:#ca8a04;">💾 Update Harga Hari Ini</button>
+        </div>
+      </form>
+      <div style="margin-top:10px;font-size:12px;color:#475569;">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer;">
+          <input type="checkbox" id="chkUpdateSemua" checked style="width:auto;"> Hitung ulang otomatis semua nilai transaksi hari ini dengan harga baru
+        </label>
+      </div>
+    </div>
+
+    <!-- PANEL BUAT AKUN PETUGAS RESMI -->
+    <div class="box" style="border-top:4px solid #7c3aed;">
+      <h3 style="margin-top:0;color:#5b21b6;">➕ Buat Akun Mandor / Operator Resmi</h3>
+      <form id="fUser" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;align-items:end;">
+        <div><label>NIP</label><input type="text" id="uNip" placeholder="MND-99" required></div>
+        <div><label>Nama</label><input type="text" id="uNama" placeholder="Nama" required></div>
+        <div><label>Role</label><select id="uRole"><option value="MANDOR">MANDOR</option><option value="OPERATOR">OPERATOR</option></select></div>
+        <div><label>Lokasi</label><input type="text" id="uLok" placeholder="Afdeling 1" required></div>
+        <div><label>Username</label><input type="text" id="uUsr" placeholder="user" required></div>
+        <div>
+          <label>Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="uPwd" value="123" required>
+            <button type="button" class="eye-btn" onclick="togglePassword('uPwd', this)"></button>
+          </div>
+        </div>
+        <div style="grid-column:span 3;"><button type="submit" style="background:#7c3aed;width:100%;">Buat Akun Resmi (Langsung Approved)</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3 style="margin-top:0;">📊 Manajemen Rekapitulasi Transaksi (Fitur Edit / Koreksi Salah Input & Hapus)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Tiket</th><th>Status</th><th>Afdeling</th><th>Truk & Sopir</th>
+          <th>Janjang</th><th>Bruto</th><th>Tara</th><th>Sortasi</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th><th>Aksi Koreksi / Hapus</th>
+        </tr>
+      </thead>
+      <tbody id="tTransAdmin"></tbody>
+    </table>
+  </div>
+
+  <div class="box">
+    <h3 style="margin-top:0;">👥 Daftar Akun Petugas & Persetujuan Anti-Penyusup</h3>
+    <table>
+      <thead><tr><th>NIP</th><th>Nama</th><th>Username</th><th>Sandi</th><th>Role</th><th>Status</th><th>Tindakan Admin</th></tr></thead>
+      <tbody id="tUsers"></tbody>
+    </table>
+  </div>
+
+  <!-- MODAL POPUP EDIT TRANSAKSI -->
+  <div class="modal-overlay" id="modalEdit">
+    <div class="modal-card">
+      <h3 style="margin-top:0;color:#1e293b;">✏️ Koreksi / Update Data Rekap Transaksi</h3>
+      <form id="formModalEdit" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="hidden" id="eId">
+        <div><label>Afdeling</label><input type="text" id="eAfd" required></div>
+        <div><label>Plat Nomor Truk</label><input type="text" id="ePlat" required></div>
+        <div><label>Nama Sopir</label><input type="text" id="eSopir" required></div>
+        <div><label>Jumlah Janjang</label><input type="number" id="eJan" required></div>
+        <div><label>Berat Bruto (Kg)</label><input type="number" id="eBruto" required></div>
+        <div><label>Berat Tara (Kg)</label><input type="number" id="eTara" required></div>
+        <div><label>Potongan Sortasi (%)</label><input type="number" id="ePot" required></div>
+        <div><label>Harga TBS / Kg (Rp)</label><input type="number" id="eHarga" required></div>
+        <div style="grid-column:span 2;display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+          <button type="button" onclick="tutupModal()" style="background:#64748b;">Batal</button>
+          <button type="submit" style="background:#16a34a;">💾 Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/script.js"></script>
+  <script>
+    let cacheTransaksi = [];
+
+    async function loadAdmin() {
+      const res = await fetch('/api/data'); const d = await res.json();
+      if (!d.user || d.user.role !== 'ADMIN') { window.location.href = '/'; return; }
+      cacheTransaksi = d.transaksi;
+
+      document.getElementById('aInfo').innerText = 'Admin: ' + d.user.nama_lengkap + ' | Harga TBS Aktif: Rp ' + fmt(d.settingHarga.harga_per_kg) + '/Kg';
+      document.getElementById('inputHargaHarian').value = d.settingHarga.harga_per_kg;
+
+      document.getElementById('tTransAdmin').innerHTML = d.transaksi.map(t => `
+        <tr>
+          <td><b>${t.no_tiket}</b></td>
+          <td><span class="badge ${t.status_tiket==='SELESAI_TIMBANG'?'bg-ok':'bg-warn'}">${t.status_tiket}</span></td>
+          <td>${t.nama_afdeling}</td>
+          <td><b>${t.plat_nomor}</b> (${t.nama_sopir})</td>
+          <td>${t.jumlah_janjang}</td>
+          <td>${fmt(t.berat_bruto)}</td>
+          <td>${fmt(t.berat_tara)}</td>
+          <td>${t.potongan_persen}%</td>
+          <td style="font-weight:bold;color:#15803d;">${fmt(t.berat_netto)} Kg</td>
+          <td>Rp ${fmt(t.harga_per_kg || d.settingHarga.harga_per_kg)}</td>
+          <td style="font-weight:bold;color:#1d4ed8;">Rp ${fmt(t.total_harga)}</td>
+          <td>
+            <button onclick="bukaEdit(${t.id_transaksi})" style="background:#2563eb;padding:4px 8px;font-size:11px;">✏️ Edit</button>
+            <button onclick="hapusTrans(${t.id_transaksi})" style="background:#dc2626;padding:4px 8px;font-size:11px;">🗑️ Hapus</button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('tUsers').innerHTML = d.users.map(u => {
+        const pid = 'p_' + u.id_user;
+        let badge = '<span class="badge bg-ok">APPROVED</span>';
+        if(u.status_akun==='PENDING') badge = '<span class="badge bg-warn">PENDING</span>';
+        if(u.status_akun==='BLOCKED') badge = '<span class="badge bg-err">BLOCKED</span>';
+        let act = u.role==='ADMIN'?'Master':`${u.status_akun!=='APPROVED'?`<button onclick="st(${u.id_user},'APPROVED')" style="background:#16a34a;padding:4px 8px;">Approve</button> `:''}${u.status_akun!=='BLOCKED'?`<button onclick="st(${u.id_user},'BLOCKED')" style="background:#ea580c;padding:4px 8px;">Blokir</button> `:''}<button onclick="st(${u.id_user},'DELETE')" style="background:#dc2626;padding:4px 8px;">Hapus</button>`;
+        return `<tr><td>${u.nip}</td><td><b>${u.nama_lengkap}</b></td><td><code>${u.username}</code></td><td><div class="pass-wrap"><input type="password" id="${pid}" value="${u.password}" readonly style="width:110px;"><button type="button" class="eye-btn" onclick="togglePassword('${pid}', this)"></button></div></td><td><b>${u.role}</b></td><td>${badge}</td><td>${act}</td></tr>`;
+      }).join('');
+    }
+
+    document.getElementById('fHarga').onsubmit = async(e) => {
+      e.preventDefault();
+      await fetch('/api/harga-tbs', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          harga_per_kg: document.getElementById('inputHargaHarian').value,
+          update_semua: document.getElementById('chkUpdateSemua').checked
+        })
+      });
+      alert('Harga TBS harian berhasil diperbarui!');
+      loadAdmin();
+    };
+
+    function bukaEdit(id) {
+      const t = cacheTransaksi.find(x => x.id_transaksi === id);
+      if (!t) return;
+      document.getElementById('eId').value = t.id_transaksi;
+      document.getElementById('eAfd').value = t.nama_afdeling;
+      document.getElementById('ePlat').value = t.plat_nomor;
+      document.getElementById('eSopir').value = t.nama_sopir;
+      document.getElementById('eJan').value = t.jumlah_janjang;
+      document.getElementById('eBruto').value = t.berat_bruto;
+      document.getElementById('eTara').value = t.berat_tara;
+      document.getElementById('ePot').value = t.potongan_persen;
+      document.getElementById('eHarga').value = t.harga_per_kg || 2850;
+      document.getElementById('modalEdit').classList.add('active');
+    }
+
+    function tutupModal() {
+      document.getElementById('modalEdit').classList.remove('active');
+    }
+
+    document.getElementById('formModalEdit').onsubmit = async(e) => {
+      e.preventDefault();
+      await fetch('/api/admin/edit-full', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          id_transaksi: document.getElementById('eId').value,
+          afdeling: document.getElementById('eAfd').value,
+          plat: document.getElementById('ePlat').value,
+          sopir: document.getElementById('eSopir').value,
+          janjang: document.getElementById('eJan').value,
+          bruto: document.getElementById('eBruto').value,
+          tara: document.getElementById('eTara').value,
+          potongan: document.getElementById('ePot').value,
+          harga_per_kg: document.getElementById('eHarga').value
+        })
+      });
+      tutupModal();
+      loadAdmin();
+    };
+
+    async function hapusTrans(id_transaksi) {
+      if (!confirm('Hapus data transaksi ini?')) return;
+      await fetch('/api/delete-transaksi', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id_transaksi }) });
+      loadAdmin();
+    }
+
+    document.getElementById('fUser').onsubmit = async(e) => {
+      e.preventDefault();
+      await fetch('/api/admin/create-user', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ nip:document.getElementById('uNip').value, nama_lengkap:document.getElementById('uNama').value, role:document.getElementById('uRole').value, afdeling_tugas:document.getElementById('uLok').value, username:document.getElementById('uUsr').value, password:document.getElementById('uPwd').value }) });
+      document.getElementById('fUser').reset(); loadAdmin();
+    };
+
+    async function st(id_user, aksi) {
+      await fetch('/api/admin/user-status', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id_user, aksi }) });
+      loadAdmin();
+    }
+
+    loadAdmin();
+  </script>
+</body>
+</html>

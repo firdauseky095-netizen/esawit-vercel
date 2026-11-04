@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>e-Sawit Cloud — Portal Publik</title><link rel="stylesheet" href="/assets/style.css"></head>
+<body>
+  <div class="header">
+    <div>
+      <h2 style="margin:0;">🌴 e-Sawit Cloud — Sistem Informasi Panen & Timbangan TBS</h2>
+      <small id="dbInfo"></small>
+    </div>
+    <div id="navRole"><span class="badge" style="background:#475569;color:white;padding:7px 14px;border-radius:20px;">👁️ MODE PUBLIK (VIEW-ONLY)</span></div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><h4>Total Netto TBS</h4><h2 id="cNetto" style="color:#16a34a;">0 Kg</h2></div>
+    <div class="card" style="border-top-color:#2563eb;"><h4>Total Tandan & Truk</h4><h2 id="cJanjang" style="color:#2563eb;">0 Janjang</h2></div>
+    <div class="card" style="border-top-color:#eab308;"><h4>Harga TBS Hari Ini</h4><h2 id="cHarga" style="color:#ca8a04;">Rp 0 / Kg</h2><small id="cHargaInfo" style="color:#64748b;font-size:11px;"></small></div>
+    <div class="card" style="border-top-color:#7c3aed;"><h4>Estimasi Nilai Produksi</h4><h2 id="cRupiah" style="color:#7c3aed;">Rp 0</h2></div>
+  </div>
+
+  <div class="grid-2" id="boxLogin">
+    <div class="box">
+      <h3 style="margin-top:0;">🔑 Login Dashboard Khusus Petugas</h3>
+      <p style="font-size:12px;color:#64748b;margin-top:0;">Halaman Dashboard Admin, Mandor, dan Operator dikunci ketat dan hanya bisa dibuka setelah login.</p>
+      <form id="fLogin" style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+        <div><label>Username</label><input type="text" id="lUser" value="admin" required></div>
+        <div>
+          <label>Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="lPass" value="123" required>
+            <button type="button" class="eye-btn" onclick="togglePassword('lPass', this)"></button>
+          </div>
+        </div>
+        <div><button type="submit" style="background:#1e293b;">Masuk</button></div>
+      </form>
+      <small style="display:block;margin-top:8px;color:#475569;">Demo (Sandi <code>123</code>): <code>admin</code> | <code>mandor1</code> | <code>operator1</code></small>
+    </div>
+
+    <div class="box" style="border-top:4px solid #ca8a04;">
+      <h3 style="margin-top:0;">📝 Pengajuan Akun Petugas Baru (Verifikasi Admin)</h3>
+      <form id="fReg" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;align-items:end;">
+        <div><label>NIP</label><input type="text" id="rNip" placeholder="MND-05" required></div>
+        <div><label>Nama</label><input type="text" id="rNama" placeholder="Nama" required></div>
+        <div><label>Role</label><select id="rRole"><option value="MANDOR">Mandor</option><option value="OPERATOR">Operator</option></select></div>
+        <div><label>Lokasi</label><input type="text" id="rLokasi" placeholder="Afdeling 1" required></div>
+        <div><label>Username</label><input type="text" id="rUser" placeholder="userbaru" required></div>
+        <div>
+          <label>Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="rPass" placeholder="123" required>
+            <button type="button" class="eye-btn" onclick="togglePassword('rPass', this)"></button>
+          </div>
+        </div>
+        <div style="grid-column:span 3;"><button type="submit" style="background:#ca8a04;width:100%;">Kirim Pengajuan ke Admin</button></div>
+      </form>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Tiket & Waktu</th><th>Status</th><th>Afdeling & Mandor</th><th>Truk & Sopir</th><th>Janjang</th><th>Netto</th><th>Harga/Kg</th><th>Total Nilai</th></tr></thead>
+    <tbody id="tPublik"></tbody>
+  </table>
+
+  <script src="/assets/script.js"></script>
+  <script>
+    async function load() {
+      const res = await fetch('/api/data'); const d = await res.json();
+      document.getElementById('dbInfo').innerText = 'Database: ' + d.dbMode;
+      document.getElementById('cHarga').innerText = 'Rp ' + fmt(d.settingHarga.harga_per_kg) + ' / Kg';
+      document.getElementById('cHargaInfo').innerText = 'Update: ' + d.settingHarga.terakhir_diubah;
+
+      if (d.user) {
+        document.getElementById('navRole').innerHTML = `<a href="/${d.user.role.toLowerCase()}" class="btn" style="background:#22c55e;">Buka Dashboard ${d.user.role}</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a>`;
+      }
+      let n=0, j=0, r=0;
+      document.getElementById('tPublik').innerHTML = d.transaksi.map(t => {
+        const ok = t.status_tiket === 'SELESAI_TIMBANG';
+        if(ok) { n+=Number(t.berat_netto); r+=Number(t.total_harga); }
+        j+=Number(t.jumlah_janjang);
+        return `<tr>
+          <td><b>${t.no_tiket}</b><br><small>${t.waktu_input}</small></td>
+          <td><span class="badge ${ok?'bg-ok':'bg-warn'}">${t.status_tiket}</span></td>
+          <td><b>${t.nama_afdeling}</b><br><small>${t.nama_mandor}</small></td>
+          <td><b>${t.plat_nomor}</b> (${t.nama_sopir})</td>
+          <td>${t.jumlah_janjang}</td>
+          <td style="color:#15803d;font-weight:bold;">${ok?fmt(t.berat_netto)+' Kg':'-'}</td>
+          <td>Rp ${fmt(t.harga_per_kg || d.settingHarga.harga_per_kg)}</td>
+          <td style="color:#1d4ed8;font-weight:bold;">${ok?'Rp '+fmt(t.total_harga):'-'}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('cNetto').innerText = fmt(n)+' Kg';
+      document.getElementById('cJanjang').innerText = fmt(j)+' Janjang ('+d.transaksi.length+' Truk)';
+      document.getElementById('cRupiah').innerText = 'Rp '+fmt(r);
+    }
+    document.getElementById('fLogin').onsubmit = async(e) => {
+      e.preventDefault();
+      const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ username:document.getElementById('lUser').value, password:document.getElementById('lPass').value }) });
+      const o = await r.json();
+      if(o.ok) window.location.href = o.redirectUrl; else alert(o.msg);
+    };
+    document.getElementById('fReg').onsubmit = async(e) => {
+      e.preventDefault();
+      const r = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ nip:document.getElementById('rNip').value, nama_lengkap:document.getElementById('rNama').value, role:document.getElementById('rRole').value, afdeling_tugas:document.getElementById('rLokasi').value, username:document.getElementById('rUser').value, password:document.getElementById('rPass').value }) });
+      const o = await r.json(); alert(o.msg); if(o.ok) document.getElementById('fReg').reset();
+    };
+    load();
+  </script>
+</body>
+</html>

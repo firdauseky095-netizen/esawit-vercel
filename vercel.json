@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app_sawit.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "assets/**",
+          "public/**",
+          "admin/**",
+          "mandor/**",
+          "operator/**",
+          "includes/**",
+          "api/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "app_sawit.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app_sawit.js"
+    }
+  ]
+}

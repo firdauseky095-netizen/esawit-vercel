@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Dashboard Mandor — e-Sawit Cloud</title><link rel="stylesheet" href="/assets/style.css"></head>
+<body>
+  <div class="header">
+    <div><h2 style="margin:0;">👷 Dashboard Mandor Panen Kebun</h2><small id="mInfo"></small></div>
+    <div><a href="/" class="btn" style="background:#475569;">Portal Publik</a> <a href="/api/logout" class="btn" style="background:#dc2626;">Logout</a></div>
+  </div>
+
+  <div class="box" style="border-top:4px solid #16a34a;">
+    <h3 style="margin-top:0;">🚛 Input SPB Truk Berangkat dari Kebun</h3>
+    <form id="fSpb" style="display:grid;grid-template-columns:repeat(4, 1fr) auto;gap:12px;align-items:end;">
+      <div>
+        <label>Asal Blok Kebun</label>
+        <select id="mAf">
+          <option value="Afdeling 1 (Blok Utara)">Afdeling 1 (Blok Utara)</option>
+          <option value="Afdeling 2 (Blok Selatan)">Afdeling 2 (Blok Selatan)</option>
+          <option value="Afdeling 3 (Plasma)">Afdeling 3 (Plasma)</option>
+          <option value="Afdeling 4 (Inti)">Afdeling 4 (Inti)</option>
+        </select>
+      </div>
+      <div><label>Plat Nomor Truk</label><input type="text" id="mPlat" placeholder="BM 1234 XX" required></div>
+      <div><label>Nama Sopir</label><input type="text" id="mSopir" placeholder="Pak Budi" required></div>
+      <div><label>Jumlah Janjang</label><input type="number" id="mJan" placeholder="450" required></div>
+      <div><button type="submit">📤 Kirim SPB</button></div>
+    </form>
+  </div>
+
+  <div class="box">
+    <h3 style="margin-top:0;">📋 Riwayat Pengiriman Kebun (Klik ✏️ Edit jika Salah Input Data SPB)</h3>
+    <table>
+      <thead><tr><th>Tiket</th><th>Status</th><th>Afdeling</th><th>Truk & Sopir</th><th>Janjang</th><th>Aksi Koreksi Mandor</th></tr></thead>
+      <tbody id="tMandor"></tbody>
+    </table>
+  </div>
+
+  <!-- MODAL EDIT SPB MANDOR -->
+  <div class="modal-overlay" id="modalMandor">
+    <div class="modal-card">
+      <h3 style="margin-top:0;">✏️ Koreksi Data SPB Kebun</h3>
+      <form id="fEditSpb" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="hidden" id="emId">
+        <div><label>Afdeling</label><input type="text" id="emAfd" required></div>
+        <div><label>Plat Nomor</label><input type="text" id="emPlat" required></div>
+        <div><label>Nama Sopir</label><input type="text" id="emSopir" required></div>
+        <div><label>Jumlah Janjang</label><input type="number" id="emJan" required></div>
+        <div style="grid-column:span 2;display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+          <button type="button" onclick="document.getElementById('modalMandor').classList.remove('active')" style="background:#64748b;">Batal</button>
+          <button type="submit">💾 Simpan Koreksi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/script.js"></script>
+  <script>
+    let listData = [];
+    async function loadMandor() {
+      const res = await fetch('/api/data'); const d = await res.json();
+      if (!d.user || (d.user.role !== 'MANDOR' && d.user.role !== 'ADMIN')) { window.location.href = '/'; return; }
+      listData = d.transaksi;
+      document.getElementById('mInfo').innerText = 'Mandor Aktif: ' + d.user.nama_lengkap + ' (' + d.user.nip + ')';
+      document.getElementById('tMandor').innerHTML = d.transaksi.map(t => `
+        <tr>
+          <td><b>${t.no_tiket}</b></td>
+          <td><span class="badge ${t.status_tiket==='SELESAI_TIMBANG'?'bg-ok':'bg-warn'}">${t.status_tiket}</span></td>
+          <td>${t.nama_afdeling}</td>
+          <td><b>${t.plat_nomor}</b> (${t.nama_sopir})</td>
+          <td><b>${t.jumlah_janjang} Janjang</b></td>
+          <td>
+            <button onclick="bukaEditSpb(${t.id_transaksi})" style="background:#2563eb;padding:4px 8px;font-size:11px;">✏️ Edit SPB</button>
+            ${t.status_tiket === 'DIKIRIM_MANDOR' ? `<button onclick="hapusSpb(${t.id_transaksi})" style="background:#dc2626;padding:4px 8px;font-size:11px;">🗑️ Batal</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function bukaEditSpb(id) {
+      const t = listData.find(x => x.id_transaksi === id);
+      if (!t) return;
+      document.getElementById('emId').value = t.id_transaksi;
+      document.getElementById('emAfd').value = t.nama_afdeling;
+      document.getElementById('emPlat').value = t.plat_nomor;
+      document.getElementById('emSopir').value = t.nama_sopir;
+      document.getElementById('emJan').value = t.jumlah_janjang;
+      document.getElementById('modalMandor').classList.add('active');
+    }
+
+    document.getElementById('fEditSpb').onsubmit = async(e) => {
+      e.preventDefault();
+      await fetch('/api/mandor/edit-spb', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          id_transaksi: document.getElementById('emId').value,
+          afdeling: document.getElementById('emAfd').value,
+          plat: document.getElementById('emPlat').value,
+          sopir: document.getElementById('emSopir').value,
+          janjang: document.getElementById('emJan').value
+        })
+      });
+      document.getElementById('modalMandor').classList.remove('active');
+      loadMandor();
+    };
+
+    async function hapusSpb(id_transaksi) {
+      if (!confirm('Batalkan kiriman SPB ini?')) return;
+      await fetch('/api/delete-transaksi', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id_transaksi }) });
+      loadMandor();
+    }
+
+    document.getElementById('fSpb').onsubmit = async(e) => {
+      e.preventDefault();
+      await fetch('/api/mandor/spb', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ afdeling:document.getElementById('mAf').value, plat:document.getElementById('mPlat').value, sopir:document.getElementById('mSopir').value, janjang:document.getElementById('mJan').value }) });
+      document.getElementById('fSpb').reset(); loadMandor();
+    };
+
+    loadMandor();
+  </script>
+</body>
+</html>
