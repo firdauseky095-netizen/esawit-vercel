@@ -28,7 +28,6 @@ function decodeBase64(str) {
   }
 }
 
-// Sinkronisasi profil Admin & Harga dari Cookie agar tidak pernah hilang di Vercel
 function syncFromCookies(req) {
   const cookies = parseCookies(req);
   if (cookies.esawit_adm_sync) {
@@ -103,7 +102,6 @@ router.get('/data', async (req, res) => {
   });
 });
 
-// KHUSUS ADMIN: Penetapan Harga TBS Harian
 router.post('/harga-tbs', async (req, res) => {
   const user = getUser(req);
   if (!user || user.role !== 'ADMIN') {
@@ -155,7 +153,6 @@ router.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-// UPDATE PROFIL ADMIN (Ganti Nama, Username, dan Sandi Admin)
 router.post('/admin/update-profile', async (req, res) => {
   const user = getUser(req);
   if (!user || user.role !== 'ADMIN') return res.status(403).json({ ok: false, msg: 'Akses ditolak!' });
