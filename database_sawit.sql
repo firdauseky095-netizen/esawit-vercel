@@ -5,7 +5,6 @@ DROP TABLE IF EXISTS transaksi_timbangan;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS afdeling;
 
--- 1. Tabel Akun Petugas (Mandor, Operator, Admin) dengan Status Persetujuan Admin
 CREATE TABLE users (
     id_user INT AUTO_INCREMENT PRIMARY KEY,
     nip VARCHAR(30) NOT NULL,
@@ -18,14 +17,12 @@ CREATE TABLE users (
     waktu_daftar VARCHAR(30) NOT NULL
 );
 
--- Data Awal Akun Petugas (1 Contoh Akun PENDING untuk diuji coba Approve oleh Admin)
 INSERT INTO users (nip, nama_lengkap, username, password, role, afdeling_tugas, status_akun, waktu_daftar) VALUES
 ('ADM-001', 'Ir. Hendra Wijaya', 'admin', 'admin123', 'ADMIN', 'Kantor Pusat / PKS', 'APPROVED', '07:00 WIB'),
 ('MND-101', 'Budi Santoso', 'mandor1', '123', 'MANDOR', 'Afdeling 1 (Blok Utara)', 'APPROVED', '07:15 WIB'),
 ('MND-102', 'Suryadi', 'mandor2', '123', 'MANDOR', 'Afdeling 3 (Plasma)', 'PENDING', '07:45 WIB'),
 ('OPR-201', 'Siti Aminah', 'operator1', '123', 'OPERATOR', 'Pos Jembatan Timbang PKS', 'APPROVED', '07:20 WIB');
 
--- 2. Tabel Master Afdeling (Blok Kebun)
 CREATE TABLE afdeling (
     id_afdeling INT AUTO_INCREMENT PRIMARY KEY,
     kode_afdeling VARCHAR(10) NOT NULL,
@@ -39,7 +36,6 @@ INSERT INTO afdeling (kode_afdeling, nama_afdeling, luas_hektar) VALUES
 ('AFD-03', 'Afdeling 3 (Plasma)', 180.75),
 ('AFD-04', 'Afdeling 4 (Inti)', 400.00);
 
--- 3. Tabel Transaksi Panen (Mandor) & Timbangan Pabrik (Operator)
 CREATE TABLE transaksi_timbangan (
     id_transaksi INT AUTO_INCREMENT PRIMARY KEY,
     no_tiket VARCHAR(30) NOT NULL,
