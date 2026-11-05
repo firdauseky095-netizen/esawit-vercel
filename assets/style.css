@@ -21,7 +21,6 @@ th { background: #1e293b; color: white; font-size: 11px; text-transform: upperca
 .bg-warn { background: #fef3c7; color: #b45309; }
 .bg-err { background: #fee2e2; color: #dc2626; }
 
-/* Tombol Mata Password Proporsional & Mudah Diklik di HP */
 .pass-wrap { position: relative !important; display: block !important; width: 100% !important; }
 .pass-wrap input { width: 100% !important; padding-right: 38px !important; }
 button.eye-btn {
