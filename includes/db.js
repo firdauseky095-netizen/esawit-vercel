@@ -5,7 +5,7 @@ const path = require('path');
 let pool = null;
 let mysqlConnected = false;
 
-// File penyimpanan lokal / serverless Vercel (/tmp)
+// serverless Vercel
 const STORE_PATH = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'esawit_state.json');
 
 const defaultHarga = {
