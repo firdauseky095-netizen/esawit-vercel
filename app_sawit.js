@@ -6,7 +6,6 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Pastikan folder assets terbaca secara statis di Lokal maupun Vercel
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/api', apiRouter);
 
